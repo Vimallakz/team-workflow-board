@@ -10,6 +10,7 @@ export interface Task {
   priority: TaskPriority;
   assignee: string;
   tags: string[];
+  position: number;
   createdAt: string;
   updatedAt: string;
 }
