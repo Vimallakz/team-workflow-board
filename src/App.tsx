@@ -1,3 +1,8 @@
+import { useStore } from "./store";
+
+const globalStore = useStore.getState();
+console.log('globalStore >>>>>>>', globalStore);
+
 function App() {
   /*
    * This will be sample code to use zustand store and actions by calling action hooks

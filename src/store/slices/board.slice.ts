@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { StoreState } from '../index';
 import type { Task, Column } from '../../types/board.types';
+import { MOCK_TASKS } from '../../utils/mockTasks';
 
 export interface BoardState {
   board: {
@@ -30,7 +31,8 @@ export const createBoardSlice: StateCreator<
   BoardState
 > = (set) => ({
   board: {
-    tasks: [],
+    // Seed board with mock tasks for initial view
+    tasks: MOCK_TASKS,
     columns: defaultColumns,
     loading: false,
     error: null,
