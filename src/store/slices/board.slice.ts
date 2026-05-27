@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 import type { StoreState } from '../index';
 import type { Task, Column } from '../../types/board.types';
 import { MOCK_TASKS } from '../../utils/mockTasks';
+import { groupTasksByStatus, TASK_STATUSES } from '../../utils/util';
 
 export interface BoardState {
   board: {
@@ -65,26 +66,38 @@ export const createBoardSlice: StateCreator<
 
     moveTask: (taskId: string, newStatus: Task['status'], position?: number) =>
       set((state) => {
-        const resolvedPosition = position ?? 0;
-        const now = new Date().toISOString();
+        /**
+         * 1. Find the source task
+         * 2. Get the columns grouped by status
+         * 3. Get the target list
+         * 4. Create the target task with the new status and updated timestamp
+         * 5. Insert the target task into the target list at the specified position
+         * 6. Get the affected statuses
+         * 7. Update the positions of the affected tasks
+         * 8. Return the new tasks state
+         */
+        const sourceTask = state.board.tasks.find((t) => t.id === taskId);
+        if (!sourceTask) return state;
 
-        const tasks = state.board.tasks.map((task) => {
-          /**
-           * Find the task with the given id and update its status and position
-           */
-          if (task.id === taskId) {
-            return { ...task, status: newStatus, position: resolvedPosition, updatedAt: now };
-          }
-          /**
-           * If the task is in the new status and its position is greater than or equal to the resolved position,
-           * increment the position by 1
-           * If task position is updated, then prev position will be shifted to the right
-           */
-          if (task.status === newStatus && task.position >= resolvedPosition) {
-            return { ...task, position: task.position + 1 };
-          }
-          return task;
-        });
+        const columns = groupTasksByStatus(state.board.tasks.filter((task) => task.id !== taskId));
+
+        const targetList = columns[newStatus];
+        const targetTask = {
+          ...sourceTask,
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+        }
+        targetList.splice(position ?? 0, 0, targetTask);
+
+        const affectedStatuses: Task['status'][] = sourceTask.status === newStatus ? [newStatus] : [newStatus, sourceTask.status];
+
+        for (const status of affectedStatuses) {
+          columns[status].forEach((task, index) => {
+            task.position = index;
+          });
+        }
+
+        const tasks = TASK_STATUSES.flatMap((status) => columns[status]);
 
         return { board: { ...state.board, tasks } };
       }),

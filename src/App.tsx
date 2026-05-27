@@ -1,4 +1,5 @@
 import { useStore } from "./store";
+import { Board } from './components/Board';
 
 const globalStore = useStore.getState();
 console.log('globalStore >>>>>>>', globalStore);
@@ -11,14 +12,13 @@ function App() {
    *   const { increment, decrement, reset } = useCounterActions();
    */
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Team Workflow Board
-        </h1>
+    <div className="flex h-full flex-col overflow-hidden bg-gray-50">
+      <header className="shrink-0 border-b border-gray-200 bg-white px-6 py-4">
+        <h1 className="text-2xl font-bold text-gray-900">Team Workflow Board</h1>
       </header>
-      <main className="p-6">
-        <p className="text-gray-600">Board setup complete. Ready for development.</p>
+
+      <main className="flex min-h-0 flex-1 flex-col overflow-auto p-6">
+        <Board />
       </main>
     </div>
   );
