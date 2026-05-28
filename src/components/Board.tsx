@@ -1,33 +1,43 @@
-import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import type { FC, ReactNode } from 'react';
-import { useMemo, useState } from 'react';
-import { useStore } from '../store';
-import { useBoardActions } from '../store/actions/board.action';
-import type { Task, TaskStatus } from '../types/board.types';
-import { groupByStatus, TASK_STATUSES } from '../utils/util';
-import { AppSideDrawer } from './AppSideDrawer';
-import { BoardColumn } from './BoardColumn';
-import { TaskCard } from './TaskCard';
-import { SortableItem } from './dnd/SortableItem';
-import { BoardDndProvider } from './dnd/BoardDndProvider';
+} from "@dnd-kit/sortable";
+import type { FC, ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { useStore } from "../store";
+import { useBoardActions } from "../store/actions/board.action";
+import type { Task, TaskStatus } from "../types/board.types";
+import { groupByStatus, TASK_STATUSES } from "../utils/util";
+import { AppSideDrawer } from "./AppSideDrawer";
+import { AddEditTask } from "./AddEditTask";
+import { BoardColumn } from "./BoardColumn";
+import { TaskCard } from "./TaskCard";
+import { SortableItem } from "./dnd/SortableItem";
+import { BoardDndProvider } from "./dnd/BoardDndProvider";
 
 const STATUS_TITLES: Record<TaskStatus, string> = {
-  backlog: 'Backlog',
-  'in-progress': 'In Progress',
-  done: 'Done',
+  backlog: "Backlog",
+  "in-progress": "In Progress",
+  done: "Done",
 };
 
 export const Board: FC = () => {
-  const { tasks, columns, selectedPriorities, searchQuery } = useStore((state) => state.board);
+  const { tasks, columns, selectedPriorities, searchQuery } = useStore(
+    (state) => state.board,
+  );
   const { moveTask } = useBoardActions();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [overColumnStatus, setOverColumnStatus] = useState<TaskStatus | null>(null);
+  const [drawerMode, setDrawerMode] = useState<"add" | "edit" | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [overColumnStatus, setOverColumnStatus] = useState<TaskStatus | null>(
+    null,
+  );
 
   /**
    * Based on filters searchQuery, selectedPriorities, filter the tasks
@@ -42,13 +52,18 @@ export const Board: FC = () => {
 
       const title = task.title.toLowerCase();
       const description = task.description.toLowerCase();
-      return title.includes(normalizedSearch) || description.includes(normalizedSearch);
+      return (
+        title.includes(normalizedSearch) ||
+        description.includes(normalizedSearch)
+      );
     });
   }, [searchQuery, selectedPriorities, tasks]);
 
   const grouped = useMemo(() => groupByStatus(filteredTasks), [filteredTasks]);
 
-  const resolveOverColumn = (over: DragOverEvent['over']): TaskStatus | null => {
+  const resolveOverColumn = (
+    over: DragOverEvent["over"],
+  ): TaskStatus | null => {
     if (!over) return null;
 
     const overId = over.id as string;
@@ -101,7 +116,11 @@ export const Board: FC = () => {
       // Cross-column: insert at over task's index in target (excluding active)
       const listWithoutActive = columnTasks.filter((t) => t.id !== activeId);
       const newIndex = listWithoutActive.findIndex((t) => t.id === overId);
-      moveTask(activeId, targetStatus, newIndex === -1 ? listWithoutActive.length : newIndex);
+      moveTask(
+        activeId,
+        targetStatus,
+        newIndex === -1 ? listWithoutActive.length : newIndex,
+      );
       return;
     }
 
@@ -119,7 +138,18 @@ export const Board: FC = () => {
   };
 
   const closeDrawer = () => {
-    setSelectedTask(null);
+    setDrawerMode(null);
+    setEditingTask(null);
+  };
+
+  const openAddDrawer = () => {
+    setEditingTask(null);
+    setDrawerMode("add");
+  };
+
+  const openEditDrawer = (task: Task) => {
+    setEditingTask(task);
+    setDrawerMode("edit");
   };
 
   const renderColumn = (status: TaskStatus): ReactNode => {
@@ -140,7 +170,7 @@ export const Board: FC = () => {
         >
           {columnTasks.map((task) => (
             <SortableItem key={task.id} id={task.id} status={task.status}>
-              <TaskCard task={task} onClick={() => setSelectedTask(task)} />
+              <TaskCard task={task} onClick={() => openEditDrawer(task)} />
             </SortableItem>
           ))}
         </SortableContext>
@@ -148,8 +178,20 @@ export const Board: FC = () => {
     );
   };
 
+  const isDrawerOpen = drawerMode !== null;
+
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <div className="mb-3 flex shrink-0 justify-end">
+        <button
+          type="button"
+          onClick={openAddDrawer}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
+        >
+          Add Task
+        </button>
+      </div>
+
       <BoardDndProvider
         activeTask={activeTask}
         onDragStart={handleDragStart}
@@ -163,12 +205,19 @@ export const Board: FC = () => {
       </BoardDndProvider>
 
       <AppSideDrawer
-        open={Boolean(selectedTask)}
+        open={isDrawerOpen}
         onClose={closeDrawer}
         side="right"
-        title="Edit Task"
+        title={drawerMode === "add" ? "Add Task" : "Edit Task"}
       >
-        <div className="p-4 text-sm">Coming soon...</div>
+        {drawerMode ? (
+          <AddEditTask
+            mode={drawerMode}
+            task={editingTask ?? undefined}
+            onSuccess={closeDrawer}
+            onCancel={closeDrawer}
+          />
+        ) : null}
       </AppSideDrawer>
     </div>
   );

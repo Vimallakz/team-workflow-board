@@ -49,15 +49,16 @@ export const TaskActions: FC = () => {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-slate-600">Search</span>
         <AppInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Title or description"
+          className="min-w-[220px]"
         />
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-slate-600">Priority</span>
         <AppMultiSelect
           values={selectedPriorities}
@@ -65,8 +66,8 @@ export const TaskActions: FC = () => {
           onChange={handlePriorityChange}
         />
       </div>
-      <div className="flex items-center gap-1">
-        <span className="text-sm font-medium text-slate-600">Sort By</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-slate-600 whitespace-nowrap">Sort By</span>
         <AppSelect value={value} options={SORT_OPTIONS} onChange={handleSortChange}/>
       </div>
     </div>
