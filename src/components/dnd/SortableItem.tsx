@@ -24,7 +24,7 @@ export const SortableItem: FC<SortableItemProps> = ({ id, status, children }) =>
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} tabIndex={-1}>
       {children}
     </div>
   );

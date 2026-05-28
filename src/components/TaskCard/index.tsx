@@ -1,9 +1,10 @@
 import type { FC } from 'react';
-import type { Task, TaskPriority } from '../types/board.types';
-import { TagBadge } from './TagBadge';
+import type { Task, TaskPriority } from '../../types/board.types';
+import { AppBadge } from '../AppBadge';
 
 interface TaskCardProps {
   task: Task;
+  onClick?: () => void;
 }
 
 const PRIORITY_CLASSES: Record<TaskPriority, string> = {
@@ -12,8 +13,20 @@ const PRIORITY_CLASSES: Record<TaskPriority, string> = {
   low: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
 };
 
-export const TaskCard: FC<TaskCardProps> = ({ task }) => (
-  <article className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+export const TaskCard: FC<TaskCardProps> = ({ task, onClick }) => (
+  <article
+    role="button"
+    tabIndex={0}
+    onClick={onClick}
+    onKeyDown={(event) => {
+      if (!onClick) return;
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onClick();
+      }
+    }}
+    className="rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
+  >
     <header className="mb-1 flex items-start justify-between gap-2">
       <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{task.title}</h3>
       <span
@@ -28,7 +41,7 @@ export const TaskCard: FC<TaskCardProps> = ({ task }) => (
     {task.tags.length > 0 && (
       <div className="mb-2 flex flex-wrap gap-1">
         {task.tags.map((tag) => (
-          <TagBadge key={tag} label={tag} />
+          <AppBadge key={tag} label={tag} />
         ))}
       </div>
     )}
