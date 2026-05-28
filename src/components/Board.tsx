@@ -23,13 +23,30 @@ const STATUS_TITLES: Record<TaskStatus, string> = {
 };
 
 export const Board: FC = () => {
-  const { tasks, columns } = useStore((state) => state.board);
+  const { tasks, columns, selectedPriorities, searchQuery } = useStore((state) => state.board);
   const { moveTask } = useBoardActions();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [overColumnStatus, setOverColumnStatus] = useState<TaskStatus | null>(null);
 
-  const grouped = useMemo(() => groupByStatus(tasks), [tasks]);
+  /**
+   * Based on filters searchQuery, selectedPriorities, filter the tasks
+   */
+  const filteredTasks = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    return tasks.filter((task) => {
+      const priorityMatch = selectedPriorities.includes(task.priority);
+      if (!priorityMatch) return false;
+
+      if (!normalizedSearch) return true;
+
+      const title = task.title.toLowerCase();
+      const description = task.description.toLowerCase();
+      return title.includes(normalizedSearch) || description.includes(normalizedSearch);
+    });
+  }, [searchQuery, selectedPriorities, tasks]);
+
+  const grouped = useMemo(() => groupByStatus(filteredTasks), [filteredTasks]);
 
   const resolveOverColumn = (over: DragOverEvent['over']): TaskStatus | null => {
     if (!over) return null;
@@ -39,7 +56,7 @@ export const Board: FC = () => {
       return overId as TaskStatus;
     }
 
-    const overTask = tasks.find((t) => t.id === overId);
+    const overTask = filteredTasks.find((t) => t.id === overId);
     if (overTask) return overTask.status;
 
     const status = over.data.current?.status as TaskStatus | undefined;
@@ -49,7 +66,7 @@ export const Board: FC = () => {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    const task = tasks.find((t) => t.id === event.active.id);
+    const task = filteredTasks.find((t) => t.id === event.active.id);
     setActiveTask(task ?? null);
     setOverColumnStatus(task?.status ?? null);
   };
@@ -67,12 +84,12 @@ export const Board: FC = () => {
 
     const activeId = active.id as string;
     const overId = over.id as string;
-    const sourceTask = tasks.find((t) => t.id === activeId);
+    const sourceTask = filteredTasks.find((t) => t.id === activeId);
     if (!sourceTask) return;
 
     const sourceStatus = sourceTask.status;
 
-    const overTask = tasks.find((t) => t.id === overId);
+    const overTask = filteredTasks.find((t) => t.id === overId);
     if (!overTask) return;
 
     const targetStatus = overTask.status;

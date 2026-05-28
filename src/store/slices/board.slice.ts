@@ -5,6 +5,7 @@ import type {
   Column,
   BoardSortField,
   SortDirection,
+  TaskPriority,
 } from '../../types/board.types';
 import { MOCK_TASKS } from '../../utils/mockTasks';
 import {
@@ -19,6 +20,8 @@ export interface BoardState {
     columns: Column[];
     sortField: BoardSortField;
     sortDirection: SortDirection;
+    selectedPriorities: TaskPriority[];
+    searchQuery: string;
     loading: boolean;
     error: string | null;
     addTask: (task: Task) => void;
@@ -26,6 +29,8 @@ export interface BoardState {
     deleteTask: (id: string) => void;
     moveTask: (taskId: string, newStatus: Task['status'], position?: number) => void;
     setSort: (field: BoardSortField, direction: SortDirection) => void;
+    setSelectedPriorities: (priorities: TaskPriority[]) => void;
+    setSearchQuery: (query: string) => void;
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
   };
@@ -39,6 +44,7 @@ const defaultColumns: Column[] = [
 
 const DEFAULT_SORT_FIELD: BoardSortField = 'createdAt';
 const DEFAULT_SORT_DIRECTION: SortDirection = 'asc';
+const DEFAULT_SELECTED_PRIORITIES: TaskPriority[] = ['low', 'medium', 'high'];
 
 const applyTaskTransformations = (tasks: Task[], sortField: BoardSortField, sortDirection: SortDirection,): Task[] => {
   /**
@@ -71,6 +77,8 @@ export const createBoardSlice: StateCreator<
     columns: defaultColumns,
     sortField: DEFAULT_SORT_FIELD,
     sortDirection: DEFAULT_SORT_DIRECTION,
+    selectedPriorities: DEFAULT_SELECTED_PRIORITIES,
+    searchQuery: '',
     loading: false,
     error: null,
 
@@ -146,6 +154,16 @@ export const createBoardSlice: StateCreator<
           board: { ...state.board, sortField, sortDirection, tasks: [...tasks] },
         };
       }),
+
+    setSelectedPriorities: (selectedPriorities: TaskPriority[]) =>
+      set((state) => ({
+        board: { ...state.board, selectedPriorities },
+      })),
+
+    setSearchQuery: (searchQuery: string) =>
+      set((state) => ({
+        board: { ...state.board, searchQuery },
+      })),
 
     setLoading: (loading: boolean) =>
       set((state) => ({
