@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import type { Task, TaskPriority } from '../../types/board.types';
+import { AppAvatar } from '../AppAvatar';
 import { AppBadge } from '../AppBadge';
 
 interface TaskCardProps {
@@ -47,9 +48,10 @@ export const TaskCard: FC<TaskCardProps> = ({ task, onClick }) => (
       </div>
     )}
 
-    <footer className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
-      <span className="font-medium text-slate-700">{task.assignee}</span>
-      <span>Pos {task.position}</span>
+    <footer className="mt-1 flex items-center justify-end text-[11px] text-slate-500">
+      <div className="flex items-center gap-2" title={task.assignee}>
+        <AppAvatar name={task.assignee} />
+      </div>
     </footer>
   </article>
 );
