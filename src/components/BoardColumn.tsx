@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
-import { memo, type FC, type PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 import type { TaskStatus } from '../types/board.types';
 
 interface BoardColumnProps extends PropsWithChildren {
@@ -10,7 +10,7 @@ interface BoardColumnProps extends PropsWithChildren {
   isHighlighted: boolean;
 }
 
-const BoardColumnComponent: FC<BoardColumnProps> = ({
+export const BoardColumn: FC<BoardColumnProps> = ({
   title,
   taskCount,
   status,
@@ -42,12 +42,3 @@ const BoardColumnComponent: FC<BoardColumnProps> = ({
     </section>
   );
 };
-
-export const BoardColumn = memo(
-  BoardColumnComponent,
-  (prev, next) =>
-    prev.title === next.title &&
-    prev.taskCount === next.taskCount &&
-    prev.status === next.status &&
-    prev.isHighlighted === next.isHighlighted,
-);

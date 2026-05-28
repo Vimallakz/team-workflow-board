@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { useBoardActions } from '../store/actions/board.action';
 import type { Task, TaskStatus } from '../types/board.types';
-import { groupTasksByStatus, TASK_STATUSES } from '../utils/util';
+import { groupByStatus, TASK_STATUSES } from '../utils/util';
 import { AppSideDrawer } from './AppSideDrawer';
 import { BoardColumn } from './BoardColumn';
 import { TaskCard } from './TaskCard';
@@ -29,7 +29,7 @@ export const Board: FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [overColumnStatus, setOverColumnStatus] = useState<TaskStatus | null>(null);
 
-  const grouped = useMemo(() => groupTasksByStatus(tasks), [tasks]);
+  const grouped = useMemo(() => groupByStatus(tasks), [tasks]);
 
   const resolveOverColumn = (over: DragOverEvent['over']): TaskStatus | null => {
     if (!over) return null;

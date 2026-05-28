@@ -5,6 +5,7 @@ export const useBoardActions = () => ({
   updateTask: useStore((state) => state.board.updateTask),
   deleteTask: useStore((state) => state.board.deleteTask),
   moveTask: useStore((state) => state.board.moveTask),
+  setSort: useStore((state) => state.board.setSort),
   setLoading: useStore((state) => state.board.setLoading),
   setError: useStore((state) => state.board.setError),
 });

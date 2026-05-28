@@ -1,19 +1,31 @@
 import type { StateCreator } from 'zustand';
 import type { StoreState } from '../index';
-import type { Task, Column } from '../../types/board.types';
+import type {
+  Task,
+  Column,
+  BoardSortField,
+  SortDirection,
+} from '../../types/board.types';
 import { MOCK_TASKS } from '../../utils/mockTasks';
-import { groupTasksByStatus, TASK_STATUSES } from '../../utils/util';
+import {
+  groupByStatus,
+  sortBy,
+  TASK_STATUSES,
+} from '../../utils/util';
 
 export interface BoardState {
   board: {
     tasks: Task[];
     columns: Column[];
+    sortField: BoardSortField;
+    sortDirection: SortDirection;
     loading: boolean;
     error: string | null;
     addTask: (task: Task) => void;
     updateTask: (id: string, updates: Partial<Task>) => void;
     deleteTask: (id: string) => void;
     moveTask: (taskId: string, newStatus: Task['status'], position?: number) => void;
+    setSort: (field: BoardSortField, direction: SortDirection) => void;
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
   };
@@ -25,6 +37,28 @@ const defaultColumns: Column[] = [
   { id: 'done', title: 'Done' },
 ];
 
+const DEFAULT_SORT_FIELD: BoardSortField = 'createdAt';
+const DEFAULT_SORT_DIRECTION: SortDirection = 'asc';
+
+const applyTaskTransformations = (tasks: Task[], sortField: BoardSortField, sortDirection: SortDirection,): Task[] => {
+  /**
+   * 1. Sort the tasks by the sort field and direction
+   * 2. Group the tasks by status
+   * 3. Reindex the tasks by position
+   * 4. Return the tasks
+   */
+  const sorted = sortBy(tasks, sortField, sortDirection);
+
+  const grouped = groupByStatus(sorted, false);
+  for (const status of TASK_STATUSES) {
+    grouped[status].forEach((task, index) => {
+      task.position = index;
+    });
+  }
+
+  return TASK_STATUSES.flatMap((status) => grouped[status]);
+};
+
 export const createBoardSlice: StateCreator<
   StoreState,
   [],
@@ -33,8 +67,10 @@ export const createBoardSlice: StateCreator<
 > = (set) => ({
   board: {
     // Seed board with mock tasks for initial view
-    tasks: MOCK_TASKS,
+    tasks: applyTaskTransformations(MOCK_TASKS, DEFAULT_SORT_FIELD, DEFAULT_SORT_DIRECTION),
     columns: defaultColumns,
+    sortField: DEFAULT_SORT_FIELD,
+    sortDirection: DEFAULT_SORT_DIRECTION,
     loading: false,
     error: null,
 
@@ -79,7 +115,7 @@ export const createBoardSlice: StateCreator<
         const sourceTask = state.board.tasks.find((t) => t.id === taskId);
         if (!sourceTask) return state;
 
-        const columns = groupTasksByStatus(state.board.tasks.filter((task) => task.id !== taskId));
+        const columns = groupByStatus(state.board.tasks.filter((task) => task.id !== taskId));
 
         const targetList = columns[newStatus];
         const targetTask = {
@@ -100,6 +136,15 @@ export const createBoardSlice: StateCreator<
         const tasks = TASK_STATUSES.flatMap((status) => columns[status]);
 
         return { board: { ...state.board, tasks } };
+      }),
+
+    setSort: (sortField: BoardSortField, sortDirection: SortDirection) =>
+      set((state) => {
+        const tasks = applyTaskTransformations(state.board.tasks, sortField, sortDirection);
+
+        return {
+          board: { ...state.board, sortField, sortDirection, tasks: [...tasks] },
+        };
       }),
 
     setLoading: (loading: boolean) =>
