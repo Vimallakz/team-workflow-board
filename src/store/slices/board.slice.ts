@@ -7,7 +7,6 @@ import type {
   SortDirection,
   TaskPriority,
 } from '../../types/board.types';
-import { MOCK_TASKS } from '../../utils/mockTasks';
 import {
   groupByStatus,
   sortBy,
@@ -33,6 +32,7 @@ export interface BoardState {
     setSearchQuery: (query: string) => void;
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
+    setTasks: (tasks: Task[]) => void;
   };
 }
 
@@ -46,7 +46,7 @@ const DEFAULT_SORT_FIELD: BoardSortField = 'createdAt';
 const DEFAULT_SORT_DIRECTION: SortDirection = 'asc';
 const DEFAULT_SELECTED_PRIORITIES: TaskPriority[] = ['low', 'medium', 'high'];
 
-const applyTaskTransformations = (tasks: Task[], sortField: BoardSortField, sortDirection: SortDirection,): Task[] => {
+export const applyTaskTransformations = (tasks: Task[], sortField: BoardSortField, sortDirection: SortDirection,): Task[] => {
   /**
    * 1. Sort the tasks by the sort field and direction
    * 2. Group the tasks by status
@@ -73,7 +73,7 @@ export const createBoardSlice: StateCreator<
 > = (set) => ({
   board: {
     // Seed board with mock tasks for initial view
-    tasks: applyTaskTransformations(MOCK_TASKS, DEFAULT_SORT_FIELD, DEFAULT_SORT_DIRECTION),
+    tasks: [],
     columns: defaultColumns,
     sortField: DEFAULT_SORT_FIELD,
     sortDirection: DEFAULT_SORT_DIRECTION,
@@ -154,6 +154,11 @@ export const createBoardSlice: StateCreator<
           board: { ...state.board, sortField, sortDirection, tasks: [...tasks] },
         };
       }),
+
+    setTasks: (tasks: Task[]) =>
+      set((state) => ({
+        board: { ...state.board, tasks },
+      })),
 
     setSelectedPriorities: (selectedPriorities: TaskPriority[]) =>
       set((state) => ({

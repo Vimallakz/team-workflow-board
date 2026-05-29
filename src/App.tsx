@@ -1,13 +1,28 @@
+import { useEffect } from 'react';
 import { Board } from './components/Board';
 import { TaskActions } from './components/TaskActions';
+import { STORAGE_KEYS } from './constants/storageKeys';
+import { useStore } from './store';
+import { applyTaskTransformations } from './store/slices/board.slice';
+import type { Task } from './types/board.types';
+import { getLocalStorage, setLocalStorage } from './utils/localStorage';
+import { MOCK_TASKS } from './utils/mockTasks';
 
 function App() {
-  /*
-   * This will be sample code to use zustand store and actions by calling action hooks
-   *
-   *   const { count } = useStore((state) => state.counter);
-   *   const { increment, decrement, reset } = useCounterActions();
-   */
+  useEffect(() => {
+    const { sortField, sortDirection, setTasks } = useStore.getState().board;
+    const stored = getLocalStorage<Task[]>(STORAGE_KEYS.tasks);
+    const source = stored ?? MOCK_TASKS;
+    const tasks = applyTaskTransformations(source, sortField, sortDirection);
+
+    setTasks(tasks);
+
+    return useStore.subscribe((state, prevState) => {
+      if (state.board.tasks === prevState.board.tasks) return;
+      setLocalStorage(STORAGE_KEYS.tasks, state.board.tasks);
+    });
+  }, []);
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gray-50">
       <header className="shrink-0 border-b border-gray-200 bg-white px-6 py-2">

@@ -10,4 +10,5 @@ export const useBoardActions = () => ({
   setSearchQuery: useStore((state) => state.board.setSearchQuery),
   setLoading: useStore((state) => state.board.setLoading),
   setError: useStore((state) => state.board.setError),
+  setTasks: useStore((state) => state.board.setTasks),
 });
